@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Numerous - Jeu</title>
+    <style>
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #6e7fdb, #4caf50);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            color: #333;
+        }
+        .container {
+            background-color: white;
+            border-radius: 12px;
+            padding: 40px;
+            width: 100%;
+            max-width: 450px;
+            text-align: center;
+        }
+        h1 {
+            color: #4CAF50;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 12px 30px;
+            font-size: 1rem;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        input {
+            padding: 12px;
+            font-size: 1rem;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            outline: none;
+        }
+        .game-info {
+            margin-top: 20px;
+            font-size: 1.1rem;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Trouvez le Nombre Mystère</h1>
+        <div class="game-info" id="gameInfo"></div>
+
+        <input type="number" id="guessInput" placeholder="Votre proposition">
+        <button id="guessButton">Soumettre</button>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        const socket = io();
+        const gameId = window.location.pathname.split('/')[2]; 
+
+        socket.emit('join-game', gameId);
+
+        socket.on('game-info', (data) => {
+            document.getElementById('gameInfo').textContent = data.message;
+        });
+
+        socket.on('result', (data) => {
+            document.getElementById('gameInfo').textContent = data.message;
+        });
+
+        document.getElementById('guessButton').addEventListener('click', () => {
+            const guess = document.getElementById('guessInput').value.trim();
+            if (guess) {
+                socket.emit('guess', { gameId, guess });
+            }
+        });
+    </script>
+</body>
+</html>

@@ -5,44 +5,108 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Numerous - Créer ou Rejoindre une Partie</title>
     <style>
-        body {
-            font-family: Arial, sans-serif;
+        * {
             margin: 0;
             padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #6e7fdb, #4caf50);
             display: flex;
             justify-content: center;
             align-items: center;
             height: 100vh;
-            background-color: #f0f0f0;
+            color: #333;
+            background-size: 400% 400%;
+            animation: gradientAnimation 10s ease infinite;
         }
+
+        @keyframes gradientAnimation {
+            0% {
+                background-position: 100% 50%;
+            }
+            50% {
+                background-position: 0% 50%;
+            }
+            100% {
+                background-position: 100% 50%;
+            }
+        }
+
         .container {
-            text-align: center;
             background-color: white;
-            padding: 20px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            border-radius: 12px;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+            padding: 40px;
+            width: 100%;
+            max-width: 450px;
+            text-align: center;
+            z-index: 10;
+        }
+        h1 {
+            font-size: 2rem;
+            color: #4CAF50;
+            margin-bottom: 20px;
+        }
+        p {
+            font-size: 1.1rem;
+            color: #555;
+            margin-bottom: 30px;
         }
         button {
-            padding: 10px 20px;
-            font-size: 16px;
             background-color: #4CAF50;
             color: white;
+            padding: 12px 30px;
+            font-size: 1rem;
             border: none;
+            border-radius: 8px;
             cursor: pointer;
+            transition: background-color 0.3s;
+            width: 100%;
         }
         button:hover {
             background-color: #45a049;
         }
         input {
-            padding: 10px;
-            margin-top: 10px;
-            font-size: 16px;
             width: 80%;
+            padding: 12px;
+            margin-top: 10px;
+            font-size: 1rem;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            outline: none;
+            transition: border-color 0.3s;
         }
-        #gameLink {
+        input:focus {
+            border-color: #4CAF50;
+        }
+        .game-link {
             margin-top: 20px;
-            font-size: 18px;
-            font-weight: bold;
+            font-size: 1.2rem;
+            font-weight: 500;
             color: #2c3e50;
+        }
+        .game-link a {
+            color: #3498db;
+            text-decoration: none;
+            font-weight: bold;
+        }
+        .game-link a:hover {
+            text-decoration: underline;
+        }
+        .section-divider {
+            margin: 30px 0;
+            border-top: 2px solid #f0f0f0;
+        }
+        .input-group {
+            margin-bottom: 20px;
+        }
+        .input-group input {
+            width: 60%;
+        }
+        .input-group button {
+            width: 35%;
         }
     </style>
 </head>
@@ -55,18 +119,20 @@
         
         <button id="createGameButton">Créer une Partie</button>
 
+        <div class="section-divider"></div>
+
         
-        <div>
+        <div class="input-group">
             <h3>Rejoindre une Partie</h3>
             <input type="text" id="gameIdInput" placeholder="Entrez l'ID de la partie">
             <button id="joinGameButton">Rejoindre</button>
         </div>
 
-        <div id="gameLink" style="display: none;"></div>
+        
+        <div id="gameLink" class="game-link" style="display: none;"></div>
     </div>
 
     <script>
-        
         document.getElementById('createGameButton').addEventListener('click', () => {
             fetch('/create-game', {
                 method: 'POST',
@@ -91,6 +157,30 @@
             } else {
                 alert('Veuillez entrer un ID de partie valide.');
             }
+        });
+    </script>
+
+    <div id="game-info"></div>
+
+    <script>
+        const socket = io();
+
+        
+        const gameId = window.location.pathname.split('/')[2];
+
+       
+        socket.emit('join-game', gameId);
+
+        
+        socket.on('game-info', (data) => {
+            document.getElementById('game-info').textContent = data.message;
+        });
+
+        
+        socket.on('game-start', (data) => {
+            alert(data.message); 
+            
+            window.location.href = `/game/${gameId}`;  
         });
     </script>
 
