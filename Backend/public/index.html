@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Numerous - Créer ou Rejoindre une Partie</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #f0f0f0;
+        }
+        .container {
+            text-align: center;
+            background-color: white;
+            padding: 20px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        input {
+            padding: 10px;
+            margin-top: 10px;
+            font-size: 16px;
+            width: 80%;
+        }
+        #gameLink {
+            margin-top: 20px;
+            font-size: 18px;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>Bienvenue dans Numerous !</h1>
+        <p>Créez une nouvelle partie ou rejoignez une partie existante.</p>
+        
+        
+        <button id="createGameButton">Créer une Partie</button>
+
+        
+        <div>
+            <h3>Rejoindre une Partie</h3>
+            <input type="text" id="gameIdInput" placeholder="Entrez l'ID de la partie">
+            <button id="joinGameButton">Rejoindre</button>
+        </div>
+
+        <div id="gameLink" style="display: none;"></div>
+    </div>
+
+    <script>
+        
+        document.getElementById('createGameButton').addEventListener('click', () => {
+            fetch('/create-game', {
+                method: 'POST',
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    const gameLinkDiv = document.getElementById('gameLink');
+                    gameLinkDiv.style.display = 'block';
+                    gameLinkDiv.innerHTML = `Partie créée avec succès ! Partagez ce lien pour inviter d'autres joueurs : <a href="${data.message.split(" : ")[1]}" target="_blank">${data.message.split(" : ")[1]}</a>`;
+                }
+            })
+            .catch(error => {
+                console.error('Erreur lors de la création de la partie:', error);
+            });
+        });
+
+        document.getElementById('joinGameButton').addEventListener('click', () => {
+            const gameId = document.getElementById('gameIdInput').value.trim();
+            if (gameId) {
+                window.location.href = `/join-game/${gameId}`;
+            } else {
+                alert('Veuillez entrer un ID de partie valide.');
+            }
+        });
+    </script>
+
+</body>
+</html>

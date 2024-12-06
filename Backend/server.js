@@ -1,77 +1,55 @@
+
 const express = require('express');
 const http = require('http');
 const socketIo = require('socket.io');
-const mongoose = require('mongoose');
-const crypto = require('crypto');
-
 
 const app = express();
 const server = http.createServer(app);
 const io = socketIo(server);
 
 
-app.use(express.json());
-
-mongoose.connect('mongodb://localhost/numerous')
-  .then(() => console.log('Connected to MongoDB'))
-  .catch(err => console.error('MongoDB connection error:', err));
+let games = {}; 
 
 
-const Game = require('./models/Game');
+app.use(express.static('public'));
 
 
-app.post('/create', async (req, res) => {
-  const code = crypto.randomBytes(3).toString('hex'); 
-  const secretNumber = Math.floor(Math.random() * 900000) + 100000;
+app.post('/create-game', (req, res) => {
+    
+    const gameId = Math.random().toString(36).substring(7); 
+    const secretNumber = Math.floor(Math.random() * 900000) + 100000;
 
-  const newGame = new Game({ code, secretNumber });
+    
+    games[gameId] = {
+        secretNumber,
+        players: []  
+    };
 
-  try {
-    await newGame.save();
-    res.status(201).json({ code });
-  } catch (err) {
-    res.status(500).json({ error: 'Failed to create game' });
-  }
+    
+    const gameLink = `http://localhost:3000/join-game/${gameId}`;
+
+    
+    res.json({
+        success: true,
+        gameId,
+        message: `Partie créée avec succès ! Partagez ce lien pour inviter d'autres joueurs : ${gameLink}`
+    });
 });
 
 
-app.post('/join', async (req, res) => {
-  const { code, player } = req.body;
+app.get('/join-game/:gameId', (req, res) => {
+    const gameId = req.params.gameId;
 
-  const game = await Game.findOne({ code });
-  if (!game) {
-    return res.status(404).json({ error: 'Game not found' });
-  }
-
-  if (game.players.includes(player)) {
-    return res.status(400).json({ error: 'Player already in the game' });
-  }
-
-  game.players.push(player);
-
-  try {
-    await game.save();
-    res.status(200).json({ message: 'Joined game successfully' });
-  } catch (err) {
-    res.status(500).json({ error: 'Failed to join game' });
-  }
+    
+    if (games[gameId]) {
+        res.sendFile(__dirname + '/public/index.html');  
+    } else {
+        res.status(404).send('Partie non trouvée');
+    }
 });
 
-io.on('connection', (socket) => {
-  console.log('A player connected:', socket.id); 
-
-  socket.on('join_game', (gameCode, playerName) => {
-    console.log(`${playerName} joined the game: ${gameCode}`);
-    socket.join(gameCode);
-    io.to(gameCode).emit('player_joined', `${playerName} has joined the game.`);
-  });
-
-  socket.on('disconnect', () => {
-    console.log('A player disconnected:', socket.id); 
-  });
-});
 
 
 server.listen(3000, () => {
-  console.log('Server is running on port 3000');
+    console.log('Serveur démarré sur http://localhost:3000');
 });
