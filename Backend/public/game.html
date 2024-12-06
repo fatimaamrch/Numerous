@@ -5,61 +5,177 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Numerous - Jeu</title>
     <style>
-        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #6e7fdb, #4caf50);
+            background-color: #a8d0e6; /* Bleu clair */
             display: flex;
             justify-content: center;
             align-items: center;
             height: 100vh;
             color: #333;
+            position: relative;
+            overflow: hidden;
         }
+
         .container {
-            background-color: white;
+            background-color: rgba(240, 239, 243, 0.9);
             border-radius: 12px;
             padding: 40px;
             width: 100%;
             max-width: 450px;
             text-align: center;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
         }
+
         h1 {
-            color: #4CAF50;
+            font-size: 2rem;
+            color: #2c3e50;
+            margin-bottom: 20px;
         }
-        button {
-            background-color: #4CAF50;
-            color: white;
-            padding: 12px 30px;
-            font-size: 1rem;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: background-color 0.3s;
+
+        .game-info {
+            margin-top: 20px;
+            font-size: 1.1rem;
+            color: #555;
+            font-weight: bold;
         }
-        button:hover {
-            background-color: #45a049;
-        }
+
         input {
+            width: 80%;
             padding: 12px;
             font-size: 1rem;
             border: 2px solid #ddd;
             border-radius: 8px;
             outline: none;
+            margin-bottom: 20px;
+            transition: border-color 0.3s;
         }
-        .game-info {
-            margin-top: 20px;
+
+        input:focus {
+            border-color: #3498db;
+        }
+
+        button {
+            background-color: #3498db;
+            color: white;
+            padding: 12px 30px;
             font-size: 1.1rem;
-            font-weight: bold;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            width: 100%;
+        }
+
+        button:hover {
+            background-color: #2980b9;
+        }
+
+        
+        .leaderboard {
+            margin-top: 20px;
+            width: 100%;
+            max-height: 200px;
+            overflow-y: auto;
+            text-align: left;
+            font-size: 0.9rem;
+            background-color: #fff;
+            border-radius: 8px;
+            padding: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .leaderboard th, .leaderboard td {
+            padding: 8px;
+            text-align: left;
+        }
+
+        .leaderboard th {
+            background-color: #3498db;
+            color: white;
+        }
+
+        .floating-numbers {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        .number {
+            position: absolute;
+            font-size: 3rem;
+            color: rgba(26, 17, 17, 0.2);
+            animation: moveNumbers 10s linear infinite;
+            opacity: 0.5;
+        }
+
+        @keyframes moveNumbers {
+            0% {
+                transform: translateX(-100%) translateY(0);
+            }
+            50% {
+                transform: translateX(100%) translateY(200px);
+            }
+            100% {
+                transform: translateX(-100%) translateY(400px);
+            }
+        }
+
+        .number:nth-child(odd) {
+            font-size: 4rem;
+            animation-duration: 12s;
+        }
+
+        .number:nth-child(even) {
+            font-size: 2.5rem;
+            animation-duration: 14s;
         }
     </style>
 </head>
 <body>
+
+    <div class="floating-numbers">
+        <div class="number" style="left: 10%; top: 10%;">123</div>
+        <div class="number" style="left: 30%; top: 20%;">456</div>
+        <div class="number" style="left: 50%; top: 30%;">789</div>
+        <div class="number" style="left: 70%; top: 40%;">234</div>
+        <div class="number" style="left: 90%; top: 50%;">567</div>
+        <div class="number" style="left: 20%; top: 60%;">890</div>
+    </div>
+
     <div class="container">
-        <h1>Trouvez le Nombre Mystère</h1>
+        <h1>Trouvez le Nombre Mystère à 6 chiffres</h1>
         <div class="game-info" id="gameInfo"></div>
 
         <input type="number" id="guessInput" placeholder="Votre proposition">
         <button id="guessButton">Soumettre</button>
+
+       
+        <div class="leaderboard">
+            <h3>Leaderboard</h3>
+            <table id="leaderboardTable" style="width: 100%; border-collapse: collapse;">
+                <thead>
+                    <tr>
+                        <th>Nom</th>
+                        <th>Dernière Proposition</th>
+                        <th>Essais</th>
+                    </tr>
+                </thead>
+                <tbody id="leaderboard">
+                  
+                </tbody>
+            </table>
+        </div>
     </div>
 
     <script src="/socket.io/socket.io.js"></script>
@@ -77,12 +193,33 @@
             document.getElementById('gameInfo').textContent = data.message;
         });
 
+        socket.on('leaderboard-update', (leaderboard) => {
+        const leaderboardTable = document.getElementById('leaderboard');
+        leaderboardTable.innerHTML = '';  
+
+        leaderboard.forEach(player => {
+            const playerItem = document.createElement('tr');
+            playerItem.innerHTML = `
+                <td>${player.name}</td>
+                <td>${player.lastGuess  !== null ? player.lastGuess : 'Aucune'}</td>
+                <td>${player.attempts}</td>
+            `;
+            leaderboardTable.appendChild(playerItem);
+        });
+    });
+
         document.getElementById('guessButton').addEventListener('click', () => {
             const guess = document.getElementById('guessInput').value.trim();
-            if (guess) {
-                socket.emit('guess', { gameId, guess });
+
+            if (!guess || guess.length !== 6 || isNaN(guess)) {
+                
+                document.getElementById('gameInfo').textContent = "Veuillez entrer un nombre à 6 chiffres.";
+                return;
             }
+
+            socket.emit('guess', { gameId, guess });
         });
     </script>
+
 </body>
 </html>

@@ -10,125 +10,121 @@
             padding: 0;
             box-sizing: border-box;
         }
+
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #6e7fdb, #4caf50);
+            font-family: 'Arial', sans-serif;
+            background-color: #f7f9fc;
             display: flex;
             justify-content: center;
             align-items: center;
             height: 100vh;
             color: #333;
-            background-size: 400% 400%;
-            animation: gradientAnimation 10s ease infinite;
-        }
-
-        @keyframes gradientAnimation {
-            0% {
-                background-position: 100% 50%;
-            }
-            50% {
-                background-position: 0% 50%;
-            }
-            100% {
-                background-position: 100% 50%;
-            }
+            padding: 20px;
         }
 
         .container {
-            background-color: white;
-            border-radius: 12px;
-            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+            background-color:  rgba(240, 239, 243, 0.9);
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
             padding: 40px;
             width: 100%;
-            max-width: 450px;
+            max-width: 400px;
             text-align: center;
-            z-index: 10;
         }
-        h1 {
+
+        .intro-box {
+        background-color: #3498db;
+        color: white;
+        border-radius: 8px;
+        padding: 20px;
+        margin-bottom: 30px;
+        text-align: center;
+        }
+
+        .intro-box h1 {
             font-size: 2rem;
-            color: #4CAF50;
+            color: whitesmoke;
             margin-bottom: 20px;
         }
-        p {
+
+        .intro-box p {
             font-size: 1.1rem;
-            color: #555;
+            color: #eee9e9;
             margin-bottom: 30px;
         }
+
         button {
-            background-color: #4CAF50;
+            background-color: #3498db;
             color: white;
-            padding: 12px 30px;
-            font-size: 1rem;
+            padding: 12px 25px;
+            font-size: 1.1rem;
             border: none;
-            border-radius: 8px;
+            border-radius: 6px;
             cursor: pointer;
-            transition: background-color 0.3s;
+            transition: background-color 0.3s ease-in-out;
             width: 100%;
+            margin-bottom: 20px;
         }
+
         button:hover {
-            background-color: #45a049;
+            background-color: #2980b9;
         }
+
         input {
             width: 80%;
             padding: 12px;
-            margin-top: 10px;
             font-size: 1rem;
             border: 2px solid #ddd;
-            border-radius: 8px;
+            border-radius: 6px;
             outline: none;
-            transition: border-color 0.3s;
+            margin-bottom: 20px;
+            transition: border-color 0.3s ease-in-out;
         }
+        
+
         input:focus {
-            border-color: #4CAF50;
+            border-color: #3498db;
         }
+
         .game-link {
-            margin-top: 20px;
-            font-size: 1.2rem;
-            font-weight: 500;
+            font-size: 1rem;
             color: #2c3e50;
+            margin-top: 20px;
         }
+
         .game-link a {
             color: #3498db;
             text-decoration: none;
             font-weight: bold;
         }
+
         .game-link a:hover {
             text-decoration: underline;
         }
+
         .section-divider {
             margin: 30px 0;
-            border-top: 2px solid #f0f0f0;
-        }
-        .input-group {
-            margin-bottom: 20px;
-        }
-        .input-group input {
-            width: 60%;
-        }
-        .input-group button {
-            width: 35%;
+            border-top: 1px solid #f0f0f0;
         }
     </style>
 </head>
 <body>
 
     <div class="container">
-        <h1>Bienvenue dans Numerous !</h1>
+        <div class="intro-box">
+            <h1>Bienvenue dans Numerous !</h1>
+            <p>Numerous est un jeu multijoueurs où le but est de trouver un nombre mystère élevé (6 chiffres).</p>
+        </div>
+
         <p>Créez une nouvelle partie ou rejoignez une partie existante.</p>
-        
         
         <button id="createGameButton">Créer une Partie</button>
 
         <div class="section-divider"></div>
 
-        
-        <div class="input-group">
-            <h3>Rejoindre une Partie</h3>
-            <input type="text" id="gameIdInput" placeholder="Entrez l'ID de la partie">
-            <button id="joinGameButton">Rejoindre</button>
-        </div>
+        <input type="text" id="gameIdInput" placeholder="Entrez l'ID de la partie" />
+        <button id="joinGameButton">Rejoindre</button>
 
-        
         <div id="gameLink" class="game-link" style="display: none;"></div>
     </div>
 
@@ -142,7 +138,7 @@
                 if (data.success) {
                     const gameLinkDiv = document.getElementById('gameLink');
                     gameLinkDiv.style.display = 'block';
-                    gameLinkDiv.innerHTML = `Partie créée avec succès ! Partagez ce lien pour inviter d'autres joueurs : <a href="${data.message.split(" : ")[1]}" target="_blank">${data.message.split(" : ")[1]}</a>`;
+                    gameLinkDiv.innerHTML = `Partie créée ! Partagez ce lien : <a href="${data.message.split(" : ")[1]}" target="_blank">${data.message.split(" : ")[1]}</a>`;
                 }
             })
             .catch(error => {
@@ -157,30 +153,6 @@
             } else {
                 alert('Veuillez entrer un ID de partie valide.');
             }
-        });
-    </script>
-
-    <div id="game-info"></div>
-
-    <script>
-        const socket = io();
-
-        
-        const gameId = window.location.pathname.split('/')[2];
-
-       
-        socket.emit('join-game', gameId);
-
-        
-        socket.on('game-info', (data) => {
-            document.getElementById('game-info').textContent = data.message;
-        });
-
-        
-        socket.on('game-start', (data) => {
-            alert(data.message); 
-            
-            window.location.href = `/game/${gameId}`;  
         });
     </script>
 
